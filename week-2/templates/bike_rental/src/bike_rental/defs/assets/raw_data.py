@@ -3,32 +3,53 @@ import polars as pl
 
 
 @asset
-def direct_rentals():
+def raw_direct_rentals():
 
-    return pl.read_csv(
-        "data/direct_pickup_bike_rentals.csv"
+    return (
+        pl.scan_csv(
+            "data/direct_pickup_bike_rentals.csv"
+        )
+        .with_columns(
+            pl.col("datetime")
+            .str.to_datetime()
+        )
     )
 
-
 @asset
-def registered_rentals():
+def raw_registered_rentals():
 
-    return pl.read_csv(
-        "data/registered_bike_rentals.csv"
+    return (
+        pl.scan_csv(
+            "data/registered_bike_rentals.csv"
+        )
+        .with_columns(
+            pl.col("datetime")
+            .str.to_datetime()
+        )
     )
 
-
 @asset
-def weather():
+def raw_weather():
 
-    return pl.read_csv(
-        "data/weather.csv"
+    return (
+        pl.scan_csv(
+            "data/weather.csv"
+        )
+        .with_columns(
+            pl.col("datetime")
+            .str.to_datetime()
+        )
     )
 
-
 @asset
-def holidays():
+def raw_holidays():
 
-    return pl.read_csv(
-        "data/holidays.csv"
+    return (
+        pl.scan_csv(
+            "data/holidays.csv"
+        )
+        .with_columns(
+            pl.col("date")
+            .str.to_date()
+        )
     )
