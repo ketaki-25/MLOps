@@ -8,7 +8,7 @@ class ParquetIOManager(IOManager):
 
         path = f"data/{context.asset_key.path[-1]}.parquet"
 
-        obj.collect().write_parquet(path)
+        obj.collect(streaming=True).write_parquet(path)
 
     def load_input(self, context):
 

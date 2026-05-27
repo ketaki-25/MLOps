@@ -78,20 +78,14 @@ def ml_ready_dataset(
                     ) / 12
             )
             .cos()
-            .alias("month_cos")
-        ])
-
-        .with_columns([
+            .alias("month_cos"),
 
             (
                     pl.col("datetime_hour")
                     .dt.weekday() >= 5
             )
             .cast(pl.Int8)
-            .alias("is_weekend")
-        ])
-
-        .with_columns([
+            .alias("is_weekend"),
 
             pl.when(
                 pl.col("datetime_hour").dt.month().is_in([12,1,2])
