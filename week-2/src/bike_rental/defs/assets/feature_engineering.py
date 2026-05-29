@@ -4,7 +4,7 @@ import polars as pl
 from dagster import asset
 
 
-@asset
+@asset(io_manager_key="parquet_io_manager")
 def ml_ready_dataset(joined_feature_table):
     """Create an ML-ready dataset with engineered time-based features."""
     df = joined_feature_table.with_columns(

@@ -36,5 +36,7 @@ defs = Definitions(
         joined_feature_table,
         ml_ready_dataset,
     ],
-    resources={"io_manager": ParquetIOManager()},
+    resources={
+            "parquet_io_manager": ParquetIOManager()
+        },
 )
