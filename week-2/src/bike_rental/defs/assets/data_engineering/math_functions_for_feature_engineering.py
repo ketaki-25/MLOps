@@ -1,13 +1,11 @@
 import math
 
 import polars as pl
-from dagster import asset
 
 
-@asset(io_manager_key="parquet_io_manager")
-def ml_ready_dataset(joined_feature_table):
-    """Create an ML-ready dataset with engineered time-based features."""
-    df = joined_feature_table.with_columns(
+def cyclic_time_features(df):
+
+    result = df.with_columns(
         [
             # ---------------------------------------------
             # HOUR CYCLICAL
@@ -18,6 +16,7 @@ def ml_ready_dataset(joined_feature_table):
             ((2 * math.pi * pl.col("datetime_hour").dt.hour()) / 24)
             .cos()
             .alias("hour_cos"),
+
             # ---------------------------------------------
             # WEEKDAY CYCLICAL
             # ---------------------------------------------
@@ -27,6 +26,7 @@ def ml_ready_dataset(joined_feature_table):
             ((2 * math.pi * pl.col("datetime_hour").dt.weekday()) / 7)
             .cos()
             .alias("weekday_cos"),
+
             # ---------------------------------------------
             # MONTH CYCLICAL
             # ---------------------------------------------
@@ -36,9 +36,15 @@ def ml_ready_dataset(joined_feature_table):
             ((2 * math.pi * pl.col("datetime_hour").dt.month()) / 12)
             .cos()
             .alias("month_cos"),
-            (pl.col("datetime_hour").dt.weekday() >= 5)
-            .cast(pl.Int8)
-            .alias("is_weekend"),
+        ]
+    ).drop(["date"])
+
+    return result
+
+def season_features(df):
+
+    result = df.with_columns(
+        [
             pl.when(pl.col("datetime_hour").dt.month().is_in([12, 1, 2]))
             .then(pl.lit("Winter"))
             .when(pl.col("datetime_hour").dt.month().is_in([3, 4, 5]))
@@ -48,6 +54,18 @@ def ml_ready_dataset(joined_feature_table):
             .otherwise(pl.lit("Fall"))
             .alias("season"),
         ]
-    ).drop(["date"])
+    )
 
-    return df
+    return result
+
+def weekend_features(df):
+
+    result = df.with_columns(
+        [
+            (pl.col("datetime_hour").dt.weekday() >= 5)
+            .cast(pl.Int8)
+            .alias("is_weekend"),
+        ]
+    )
+
+    return result
