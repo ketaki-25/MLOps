@@ -6,8 +6,6 @@ class DataLoader:
 
     def load_csv(self, path, engine="polars", **kwargs):
 
-        print(f"load_csv called with path={path!r}")
-
         if engine == "polars":
             lf = pl.scan_csv(path, **kwargs)
 

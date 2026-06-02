@@ -1,0 +1,96 @@
+experiments:
+
+  total_hourly_linear:
+
+    dataset: base_dataset_hourly
+    target: rental_count
+    model: linear_regression
+    features:
+      numeric:
+        - temperature_c
+        - perceived_temperature_c
+        - humidity
+        - windspeed_kmh
+      categorical:
+        - conditions
+        - season
+      boolean:
+        - is_holiday
+        - is_weekend
+      cyclic:
+        - hour_sin
+        - hour_cos
+        - weekday_sin
+        - weekday_cos
+        - month_sin
+        - month_cos
+      id_columns:
+          - location_id
+    preprocessing:
+      scale_numeric: true
+      one_hot_encode: true
+
+  total_hourly_rf:
+
+    dataset: base_dataset_hourly
+    target: rental_count
+    model: random_forest
+    features:
+      numeric:
+        - temperature_c
+        - perceived_temperature_c
+        - humidity
+        - windspeed_kmh
+      categorical:
+        - conditions
+        - season
+      boolean:
+        - is_holiday
+        - is_weekend
+      cyclic:
+        - hour_sin
+        - hour_cos
+        - weekday_sin
+        - weekday_cos
+        - month_sin
+        - month_cos
+      id_columns:
+        - location_id
+    preprocessing:
+      scale_numeric: false
+      one_hot_encode: true
+
+  total_hourly_xgb:
+
+    dataset: base_dataset_hourly
+    target: rental_count
+    model: xgboost
+    features:
+      numeric:
+        - temperature_c
+        - perceived_temperature_c
+        - humidity
+        - windspeed_kmh
+      categorical:
+        - conditions
+        - season
+      boolean:
+        - is_holiday
+        - is_weekend
+      cyclic:
+        - hour_sin
+        - hour_cos
+        - weekday_sin
+        - weekday_cos
+        - month_sin
+        - month_cos
+      id_columns:
+        - location_id
+    preprocessing:
+      scale_numeric: false
+      one_hot_encode: false
+      impute_numeric: median
+      impute_categorical: most_frequent
+      remove_low_variance: false
+      log_target: false
+      add_missing_indicators: false

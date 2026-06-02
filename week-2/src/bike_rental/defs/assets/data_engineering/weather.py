@@ -1,9 +1,10 @@
 import polars as pl
-from dagster import asset, MaterializeResult
+from dagster import asset
 import os
-
 from polars import LazyFrame
 
+#TODO:
+# Setup data validation and testing
 
 @asset(required_resource_keys={"loader"},group_name="hourly_weather")
 def hourly_weather(context) -> LazyFrame:
@@ -13,6 +14,9 @@ def hourly_weather(context) -> LazyFrame:
         os.getenv("WEATHER_PATH"),
         engine="polars",
     )
+
+    #TODO:
+    # handle missing and incorrect data. Throw away those rows
 
     result = (
         raw_weather.with_columns(
