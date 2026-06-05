@@ -1,27 +1,24 @@
 
 
 def select_input_features(context):
-    """Return feature columns configured for the active experiment."""
+    """Return consistent feature list across pipeline."""
 
-    cfg = (
-        context.resources
-        .experiment_config
-        .get_active_experiment()
-    )
-
+    cfg = context.resources.experiment_config.get_active_experiment()
     feature_cfg = cfg["features"]
 
-    numeric = feature_cfg["numeric"]
-    categorical = feature_cfg["categorical"]
-    boolean = feature_cfg["boolean"]
-    cyclic = feature_cfg["cyclic"]
+    def safe_get(key):
+        value = feature_cfg.get(key, [])
+        return value if value else []
 
     selected_features = (
-        numeric
-        + categorical
-        + boolean
-        + cyclic
+        safe_get("numeric")
+        + safe_get("categorical")
+        + safe_get("boolean")
+        + safe_get("cyclic")
+        + safe_get("id_columns")
     )
+
+    selected_features = list(dict.fromkeys(selected_features))
 
     return selected_features, cfg
 
