@@ -3,14 +3,14 @@ from dagster import AssetExecutionContext, asset
 from bike_rental.utils.feature_selection_helper import select_input_features
 
 @asset(
-    group_name="ml_ready_data_by_location",
+    group_name="input_target_feature_split_by_location",
     required_resource_keys={"experiment_config"},
 )
 def X_train_hourly_by_location(
     context: AssetExecutionContext,
     train_dataset_hourly_by_location: pd.DataFrame,
 ):
-    """Create training feature matrix for hourly-by-location dataset
+    """Create training_dataset_generation feature matrix for hourly-by-location dataset
     using experiment configuration."""
 
     selected_features, cfg = select_input_features(context)
@@ -36,14 +36,14 @@ def X_train_hourly_by_location(
     return X
 
 @asset(
-    group_name="ml_ready_data_by_location",
+    group_name="input_target_feature_split_by_location",
     required_resource_keys={"experiment_config"},
 )
 def y_train_hourly_by_location(
     context: AssetExecutionContext,
     train_dataset_hourly_by_location: pd.DataFrame,
 ):
-    """Create training target vector for hourly-by-location dataset."""
+    """Create training_dataset_generation target vector for hourly-by-location dataset."""
 
     cfg = (
         context.resources
@@ -66,7 +66,7 @@ def y_train_hourly_by_location(
     return y
 
 @asset(
-    group_name="ml_ready_data_by_location",
+    group_name="input_target_feature_split_by_location",
     required_resource_keys={"experiment_config"},
 )
 def X_test_hourly_by_location(
@@ -105,7 +105,7 @@ def X_test_hourly_by_location(
     return X
 
 @asset(
-    group_name="ml_ready_data_by_location",
+    group_name="input_target_feature_split_by_location",
     required_resource_keys={"experiment_config"},
 )
 def y_test_hourly_by_location(

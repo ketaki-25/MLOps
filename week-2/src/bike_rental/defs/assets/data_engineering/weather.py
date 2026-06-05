@@ -17,9 +17,29 @@ def hourly_weather(context) -> LazyFrame:
 
     #TODO:
     # handle missing and incorrect data. Throw away those rows
+    df = raw_weather
+    df = df.filter(
+        pl.col("humidity").is_not_null()
+        & (pl.col("humidity") > 0)
+    )
+
+    df = df.filter(
+        pl.col("temperature_c").is_not_null()
+        & pl.col("perceived_temperature_c").is_not_null()
+    )
+
+    # temperature consistency rule:
+    # abs(temp - perceived_temp) <= 10
+    df = df.filter(
+        (pl.col("temperature_c") - pl.col("perceived_temperature_c"))
+        .abs()
+        <= 10
+    )
+
+    df = df.filter(pl.col("datetime").is_not_null())
 
     result = (
-        raw_weather.with_columns(
+        df.with_columns(
             pl.col("datetime").dt.truncate("1h").alias("datetime_hour")
         )
         .group_by("datetime_hour")

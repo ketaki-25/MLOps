@@ -36,7 +36,7 @@ class CsvIOManager(IOManager):
             context.upstream_output.asset_key.path[-1]
         )
 
-        path = f"{upstream_asset}.csv"
+        path = f"data/output_data/{upstream_asset}.csv"
 
         context.log.info(
             f"Loading asset from {path}"

@@ -66,6 +66,7 @@ def joined_feature_table(
             pl.col("datetime_hour")
         )
         .join(hourly_weather, on="datetime_hour", how="left")
+        .drop_nulls()
     )
 
     final_df = (

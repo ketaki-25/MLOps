@@ -6,18 +6,18 @@ from bike_rental.utils.splitting import time_based_split
 # HOURLY DATASET
 # -----------------------------
 
-@asset(group_name="training_data", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
 def train_dataset_hourly(
     context,
     base_dataset_hourly: pd.DataFrame,
 ):
     """
-    Creates the training split of the hourly dataset using a time-based split.
+    Creates the training_dataset_generation split of the hourly dataset using a time-based split.
 
     This asset:
     - Receives the full engineered hourly dataset
     - Splits it chronologically (no shuffling)
-    - Returns the training portion
+    - Returns the training_dataset_generation portion
 
     Metadata includes:
     - Dataset shape
@@ -45,7 +45,7 @@ def train_dataset_hourly(
     return train
 
 
-@asset(group_name="training_data", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
 def test_dataset_hourly(
     context,
     base_dataset_hourly: pd.DataFrame,
@@ -88,17 +88,17 @@ def test_dataset_hourly(
 # BY LOCATION DATASET
 # -----------------------------
 
-@asset(group_name="training_data", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
 def train_dataset_hourly_by_location(
     context,
     base_dataset_hourly_by_location: pd.DataFrame,
 ):
-    """ Creates the training split of the hourly-by-location dataset using a time-based split.
+    """ Creates the training_dataset_generation split of the hourly-by-location dataset using a time-based split.
 
     This asset:
     - Receives engineered hourly dataset grouped by location
     - Splits it chronologically (no shuffling)
-    - Returns the training portion
+    - Returns the training_dataset_generation portion
 
     Metadata includes:
     - Dataset shape
@@ -127,7 +127,7 @@ def train_dataset_hourly_by_location(
     return train
 
 
-@asset(group_name="training_data", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
 def test_dataset_hourly_by_location(
     context,
     base_dataset_hourly_by_location: pd.DataFrame,

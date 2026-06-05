@@ -29,6 +29,11 @@ experiments:
     preprocessing:
       scale_numeric: true
       one_hot_encode: true
+      impute_numeric: false
+      impute_categorical: false
+      remove_low_variance: false
+      log_target: false
+      add_missing_indicators: false
 
   total_hourly_rf:
 
@@ -88,7 +93,7 @@ experiments:
         - location_id
     preprocessing:
       scale_numeric: false
-      one_hot_encode: false
+      one_hot_encode: true
       impute_numeric: median
       impute_categorical: most_frequent
       remove_low_variance: false
