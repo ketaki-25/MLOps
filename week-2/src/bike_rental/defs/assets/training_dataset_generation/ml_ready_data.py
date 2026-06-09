@@ -1,262 +1,393 @@
-from dagster import AssetExecutionContext
-from dagster import asset
-from bike_rental.utils.feature_selection_helper import select_input_features, select_target_features
-from bike_rental.utils.model_specific_preprocessing import validate_feature_alignment
-from bike_rental.utils.fit_transform_helper import fit_transform_features, transform_features, get_fitted_preprocessor
+from dagster import (
+    asset,
+    AssetIn,
+    AssetKey,
+)
+
 import pandas as pd
-import numpy as np
 
-@asset(group_name="input_target_feature_split", required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager")
-def X_train_hourly(context: AssetExecutionContext, train_dataset_hourly):
-    """Create training_dataset_generation feature matrix using the active experiment configuration."""
+from bike_rental.utils.model_specific_preprocessing import (
+    validate_feature_alignment,
+)
 
-    selected_features, cfg = select_input_features(context)
-
-    validate_feature_alignment(
-        train_dataset_hourly,
-        selected_features,
-        cfg,
-    )
-
-    X = train_dataset_hourly[
-        selected_features
-    ].copy()
-
-    context.add_output_metadata(
-        {
-            "rows": len(X),
-            "columns": X.shape[1],
-            "selected_features": selected_features,
-            "model": cfg["model"],
-            "target": cfg["target"],
-        }
-    )
-
-    return X
+from bike_rental.utils.fit_transform_helper import (
+    fit_transform_features,
+    transform_features,
+    get_fitted_preprocessor,
+)
 
 
-@asset(group_name="input_target_feature_split", required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager")
-def y_train_hourly(context: AssetExecutionContext, train_dataset_hourly):
-    """Create training_dataset_generation target vector using the active experiment configuration."""
+def _get_selected_features(model_cfg: dict) -> list[str]:
+    """
+    Flatten all configured feature groups into a single feature list.
+    """
 
-    target_col, cfg = (select_target_features(context))
+    selected_features = []
 
-    y = train_dataset_hourly[target_col].copy()
+    for feature_group in model_cfg["features"].values():
+        if feature_group:
+            selected_features.extend(feature_group)
 
-    context.add_output_metadata(
-        {
-            "target_column": target_col,
-            "rows": len(y),
-            "mean": float(y.mean()),
-            "min": float(y.min()),
-            "max": float(y.max()),
-            "null_values": int(y.isna().sum()),
-        }
-    )
+    return selected_features
 
-    return y
 
-@asset(group_name="input_target_feature_split", required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager")
-def X_test_hourly(
-    context: AssetExecutionContext,
-    test_dataset_hourly,
+def _base_metadata(
+    experiment_name: str,
+    model_name: str,
+    experiment_cfg: dict,
+) -> dict:
+    """
+    Common metadata attached to all assets.
+    """
+
+    return {
+        "experiment": experiment_name,
+        "model": model_name,
+        "target": experiment_cfg["target"],
+        "dataset": experiment_cfg["dataset"],
+    }
+
+
+def create_ml_ready_assets(
+    experiment_name: str,
+    model_name: str,
+    experiment_cfg: dict,
+    model_cfg: dict,
 ):
     """
-    Create test feature matrix using the active
-    experiment configuration.
+    Create all ML-ready assets for a single model within an experiment.
+
+    Example generated assets:
+
+        total_hourly_linear_regression_X_train
+        total_hourly_linear_regression_X_test
+        total_hourly_linear_regression_X_train_processed
+        total_hourly_linear_regression_X_test_processed
+        total_hourly_linear_regression_y_train
+        total_hourly_linear_regression_y_test
     """
-    selected_features, cfg = select_input_features(context)
 
-    X = test_dataset_hourly[
-        selected_features
-    ].copy()
+    selected_features = _get_selected_features(model_cfg)
 
-    context.add_output_metadata(
-        {
-            "rows": len(X),
+    target = experiment_cfg["target"]
+
+    preprocessing_cfg = model_cfg["preprocessing"]
+
+    asset_prefix = f"{experiment_name}_{model_name}"
+
+    train_dataset_key = AssetKey(["train_dataset_hourly"])
+    test_dataset_key = AssetKey(["test_dataset_hourly"])
+
+    # =======================================================
+    # X TRAIN
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_X_train",
+        ins={
+            "dataset": AssetIn(
+                key=train_dataset_key
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
+    )
+    def X_train(
+        context,
+        dataset: pd.DataFrame,
+    ):
+
+        validate_feature_alignment(
+            dataset,
+            selected_features,
+            model_cfg,
+        )
+
+        X = dataset[selected_features].copy()
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": X.shape[0],
             "columns": X.shape[1],
+            "feature_count": len(selected_features),
             "selected_features": selected_features,
-            "model": cfg["model"],
-            "target": cfg["target"],
-        }
+        })
+
+        return X
+
+    # =======================================================
+    # y TRAIN
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_y_train",
+        ins={
+            "dataset": AssetIn(
+                key=train_dataset_key
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
     )
+    def y_train(
+        context,
+        dataset: pd.DataFrame,
+    ):
 
-    return X
+        y = dataset[target].copy()
 
-
-@asset(group_name="input_target_feature_split", required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager")
-def y_test_hourly(
-    context: AssetExecutionContext,
-    test_dataset_hourly,
-):
-    """Create test target vector for model evaluation."""
-
-    target_col, cfg = (select_target_features(context))
-
-    y = test_dataset_hourly[target_col].copy()
-
-    context.add_output_metadata(
-        {
-            "target_column": target_col,
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
             "rows": len(y),
-            "mean": float(y.mean()),
-            "min": float(y.min()),
-            "max": float(y.max()),
             "null_values": int(y.isna().sum()),
-        }
+        })
+
+        return y
+
+    # =======================================================
+    # X TEST
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_X_test",
+        ins={
+            "dataset": AssetIn(
+                key=test_dataset_key
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
     )
+    def X_test(
+        context,
+        dataset: pd.DataFrame,
+    ):
 
-    return y
+        X = dataset[selected_features].copy()
 
-@asset(group_name="model_specific_preprocessing", required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager")
-def X_train_processed_hourly(
-    context: AssetExecutionContext,
-    X_train_hourly: pd.DataFrame,
-):
-    """Apply configured preprocessing pipeline to training_dataset_generation features.
-    Fits preprocessing on training_dataset_generation data only and returns transformed training_dataset_generation matrix."""
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": X.shape[0],
+            "columns": X.shape[1],
+            "feature_count": len(selected_features),
+            "selected_features": selected_features,
+        })
 
-    cfg = (
-        context.resources
-        .experiment_config
-        .get_active_experiment()
+        return X
+
+    # =======================================================
+    # y TEST
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_y_test",
+        ins={
+            "dataset": AssetIn(
+                key=test_dataset_key
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
     )
+    def y_test(
+        context,
+        dataset: pd.DataFrame,
+    ):
 
-    (
+        y = dataset[target].copy()
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": len(y),
+            "null_values": int(y.isna().sum()),
+        })
+
+        return y
+
+    # =======================================================
+    # X TRAIN PROCESSED
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_X_train_processed",
+        ins={
+            "X_train": AssetIn(
+                key=AssetKey(
+                    [f"{asset_prefix}_X_train"]
+                )
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
+    )
+    def X_train_processed(
+        context,
+        X_train: pd.DataFrame,
+    ):
+
+        X_processed, _ = fit_transform_features(
+            X_train,
+            model_cfg,
+        )
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": X_processed.shape[0],
+            "columns": X_processed.shape[1],
+            "scale_numeric": preprocessing_cfg["scale_numeric"],
+            "one_hot_encode": preprocessing_cfg["one_hot_encode"],
+        })
+
+        return X_processed
+
+    # =======================================================
+    # X TEST PROCESSED
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_X_test_processed",
+        ins={
+            "X_test": AssetIn(
+                key=AssetKey(
+                    [f"{asset_prefix}_X_test"]
+                )
+            ),
+            "X_train": AssetIn(
+                key=AssetKey(
+                    [f"{asset_prefix}_X_train"]
+                )
+            ),
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
+    )
+    def X_test_processed(
+        context,
+        X_test: pd.DataFrame,
+        X_train: pd.DataFrame,
+    ):
+
+        preprocessor = get_fitted_preprocessor(
+            X_train,
+            model_cfg,
+        )
+
+        X_processed = transform_features(
+            X_test,
+            preprocessor,
+        )
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": X_processed.shape[0],
+            "columns": X_processed.shape[1],
+            "scale_numeric": preprocessing_cfg["scale_numeric"],
+            "one_hot_encode": preprocessing_cfg["one_hot_encode"],
+        })
+
+        return X_processed
+
+    # =======================================================
+    # y TRAIN PROCESSED
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_y_train_processed",
+        ins={
+            "y_train": AssetIn(
+                key=AssetKey(
+                    [f"{asset_prefix}_y_train"]
+                )
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
+    )
+    def y_train_processed(
+        context,
+        y_train,
+    ):
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": len(y_train),
+            "mean": float(y_train.mean()),
+            "min": float(y_train.min()),
+            "max": float(y_train.max()),
+        })
+
+        return y_train.copy()
+
+    # =======================================================
+    # y TEST PROCESSED
+    # =======================================================
+
+    @asset(
+        name=f"{asset_prefix}_y_test_processed",
+        ins={
+            "y_test": AssetIn(
+                key=AssetKey(
+                    [f"{asset_prefix}_y_test"]
+                )
+            )
+        },
+        group_name=experiment_name,
+        io_manager_key="csv_io_manager",
+    )
+    def y_test_processed(
+        context,
+        y_test,
+    ):
+
+        context.add_output_metadata({
+            **_base_metadata(
+                experiment_name,
+                model_name,
+                experiment_cfg,
+            ),
+            "rows": len(y_test),
+            "mean": float(y_test.mean()),
+            "min": float(y_test.min()),
+            "max": float(y_test.max()),
+        })
+
+        return y_test.copy()
+
+    return [
+        X_train,
+        y_train,
+        X_test,
+        y_test,
         X_train_processed,
-        preprocessor,
-    ) = fit_transform_features(
-        X_train_hourly,
-        cfg,
-    )
-
-
-
-    context.add_output_metadata(
-        {
-            "rows": X_train_processed.shape[0],
-            "columns": X_train_processed.shape[1],
-            "model": cfg["model"],
-            "scale_numeric": cfg["preprocessing"][
-                "scale_numeric"
-            ],
-            "one_hot_encode": cfg["preprocessing"][
-                "one_hot_encode"
-            ],
-        }
-    )
-
-    assert not X_train_processed.isna().any().any(), "NaNs in training data"
-    #assert not np.isinf(X_train_processed.values).any(), "Inf in training data"
-
-    return X_train_processed
-
-#TODO:
-# Do not fit twice reimplement the design to incorporate the same fitted preprocessor
-
-@asset(
-    group_name="model_specific_preprocessing",
-    required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager"
-)
-def X_test_processed_hourly(
-    context: AssetExecutionContext,
-    X_test_hourly: pd.DataFrame,
-    X_train_hourly: pd.DataFrame,
-):
-    """
-    Apply configured preprocessing pipeline
-    to test features.
-
-    Uses preprocessor fitted on training_dataset_generation data.
-    """
-    cfg = (
-        context.resources
-        .experiment_config
-        .get_active_experiment()
-    )
-
-    preprocessor = get_fitted_preprocessor(X_train_hourly, cfg=cfg)
-
-
-    X_test_processed = transform_features(
-        X_test_hourly,
-        preprocessor,
-    )
-
-    context.add_output_metadata(
-        {
-            "rows": X_test_processed.shape[0],
-            "columns": X_test_processed.shape[1],
-            "model": cfg["model"],
-            "scale_numeric": cfg["preprocessing"][
-                "scale_numeric"
-            ],
-            "one_hot_encode": cfg["preprocessing"][
-                "one_hot_encode"
-            ],
-        }
-    )
-
-    assert not X_test_processed.isna().any().any(), "NaNs in training data"
-    #assert not np.isinf(X_test_processed.values).any(), "Inf in training data"
-
-    return X_test_processed
-
-@asset(
-    group_name="model_specific_preprocessing",
-    required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager"
-)
-def y_train_processed_hourly(
-    context: AssetExecutionContext,
-    y_train_hourly,
-):
-    """
-    Return processed training_dataset_generation target.
-
-    Currently no target transformations
-    are applied.
-    """
-
-    y = y_train_hourly.copy()
-
-    context.add_output_metadata(
-        {
-            "rows": len(y),
-            "mean": float(y.mean()),
-            "min": float(y.min()),
-            "max": float(y.max()),
-        }
-    )
-
-    assert not y.isna().any().any(), "NaNs in training data"
-    #assert not np.isinf(y.values).any(), "Inf in training data"
-
-    return y
-
-@asset(
-    group_name="model_specific_preprocessing",
-    required_resource_keys={"experiment_config"}, io_manager_key="csv_io_manager"
-)
-def y_test_processed_hourly(
-    context: AssetExecutionContext,
-    y_test_hourly,
-):
-    """Return processed test target.
-
-    Currently no target transformations are applied."""
-
-    y = y_test_hourly.copy()
-
-    context.add_output_metadata(
-        {
-            "rows": len(y),
-            "mean": float(y.mean()),
-            "min": float(y.min()),
-            "max": float(y.max()),
-        }
-    )
-
-    assert not y.isna().any().any(), "NaNs in training data"
-    #assert not np.isinf(y.values).any(), "Inf in training data"
-
-    return y
+        X_test_processed,
+        y_train_processed,
+        y_test_processed,
+    ]

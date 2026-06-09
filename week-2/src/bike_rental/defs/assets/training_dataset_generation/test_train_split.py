@@ -88,7 +88,7 @@ def test_dataset_hourly(
 # BY LOCATION DATASET
 # -----------------------------
 
-@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split_location", io_manager_key="pandas_parquet_io_manager")
 def train_dataset_hourly_by_location(
     context,
     base_dataset_hourly_by_location: pd.DataFrame,
@@ -127,7 +127,7 @@ def train_dataset_hourly_by_location(
     return train
 
 
-@asset(group_name="train_test_split", io_manager_key="pandas_parquet_io_manager")
+@asset(group_name="train_test_split_location", io_manager_key="pandas_parquet_io_manager")
 def test_dataset_hourly_by_location(
     context,
     base_dataset_hourly_by_location: pd.DataFrame,

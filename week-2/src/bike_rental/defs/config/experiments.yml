@@ -1,121 +1,111 @@
 experiments:
 
-  total_hourly_linear:
+  total_hourly:
 
     dataset: base_dataset_hourly
     target: rental_count
-    model: linear_regression
+    models:
 
-    features:
-      numeric:
-        - temperature_c
-        - perceived_temperature_c
+      linear_regression:
 
-      categorical:
-        - conditions
-        - season
+        features:
+          numeric:
+            - temperature_c
+            - perceived_temperature_c
 
-      boolean:
-        - is_holiday
-        - is_weekend
+          categorical:
+            - conditions
+            - season
 
-      cyclic:
-        - hour_sin
-        - hour_cos
-        - weekday_sin
-        - weekday_cos
-        - month_sin
-        - month_cos
+          boolean:
+            - is_holiday
+            - is_weekend
 
-      id_columns:
+          cyclic:
+            - hour_sin
+            - hour_cos
+            - weekday_sin
+            - weekday_cos
+            - month_sin
+            - month_cos
 
-    preprocessing:
-      scale_numeric: true
-      one_hot_encode: true
-      impute_numeric: null
-      impute_categorical: null
-      remove_low_variance: false
-      log_target: false
-      add_missing_indicators: false
+          id_columns:
 
-  total_hourly_rf:
+        preprocessing:
+          scale_numeric: true
+          one_hot_encode: true
+          impute_numeric: null
+          impute_categorical: null
+          remove_low_variance: false
 
-    dataset: base_dataset_hourly
-    target: rental_count
-    model: random_forest
+    
 
-    features:
-      numeric:
-        - temperature_c
-        - perceived_temperature_c
-        - humidity
-        - windspeed_kmh
+      random_forest:
 
-      categorical:
-        - conditions
-        - season
+        features:
+          numeric:
+            - temperature_c
+            - perceived_temperature_c
+            - humidity
+            - windspeed_kmh
 
-      boolean:
-        - is_holiday
-        - is_weekend
+          categorical:
+            - conditions
+            - season
 
-      cyclic:
-        - hour_sin
-        - hour_cos
-        - weekday_sin
-        - weekday_cos
-        - month_sin
-        - month_cos
+          boolean:
+            - is_holiday
+            - is_weekend
 
-      id_columns:
-        - location_id
+          cyclic:
+            - hour_sin
+            - hour_cos
+            - weekday_sin
+            - weekday_cos
+            - month_sin
+            - month_cos
 
-    preprocessing:
-      scale_numeric: false
-      one_hot_encode: true
-      impute_numeric: null
-      impute_categorical: null
-      remove_low_variance: false
-      log_target: false
-      add_missing_indicators: false
+          id_columns:
 
-  total_hourly_xgb:
+        preprocessing:
+          scale_numeric: false
+          one_hot_encode: true
+          impute_numeric: null
+          impute_categorical: null
+          remove_low_variance: false
 
-    dataset: base_dataset_hourly
-    target: rental_count
-    model: xgboost
 
-    features:
-      numeric:
-        - temperature_c
-        - perceived_temperature_c
-        - humidity
-        - windspeed_kmh
 
-      categorical:
-        - conditions
-        - season
+      xgboost:
 
-      boolean:
-        - is_holiday
-        - is_weekend
+        features:
+          numeric:
+            - temperature_c
+            - perceived_temperature_c
+            - humidity
+            - windspeed_kmh
 
-      cyclic:
-        - hour_sin
-        - hour_cos
-        - weekday_sin
-        - weekday_cos
-        - month_sin
-        - month_cos
+          categorical:
+            - conditions
+            - season
 
-      id_columns:
-        - location_id
+          boolean:
+            - is_holiday
+            - is_weekend
 
-    preprocessing:
-      scale_numeric: false
-      one_hot_encode: false
-      impute_numeric: median
-      impute_categorical: most_frequent
-      remove_low_variance: false
-      log_target: false
-      add_missing_indicators: false
+          cyclic:
+            - hour_sin
+            - hour_cos
+            - weekday_sin
+            - weekday_cos
+            - month_sin
+            - month_cos
+
+          id_columns:
+
+        preprocessing:
+          scale_numeric: false
+          one_hot_encode: false
+          impute_numeric: median
+          impute_categorical: most_frequent
+          remove_low_variance: false

@@ -1,5 +1,4 @@
 from dagster import Definitions
-from bike_rental.defs.assets.training_dataset_generation.ml_ready_data import y_train_hourly, X_train_hourly, X_test_hourly, y_test_hourly, y_test_processed_hourly, y_train_processed_hourly, X_train_processed_hourly, X_test_processed_hourly
 from bike_rental.defs.config.experiment_config import ExperimentConfigResource
 from bike_rental.defs.resources.data_loader import DataLoader
 from bike_rental.defs.assets.data_engineering.feature_engineering import base_dataset_hourly, base_dataset_hourly_by_location
@@ -13,9 +12,10 @@ from bike_rental.defs.io_managers.parquet_io_manager import PolarsParquetIOManag
 from bike_rental.defs.io_managers.csv_io_manager import CsvIOManager
 from bike_rental.defs.assets.data_engineering.joins_by_location import joined_feature_table_by_location
 from bike_rental.defs.assets.training_dataset_generation.test_train_split import train_dataset_hourly, train_dataset_hourly_by_location, test_dataset_hourly, test_dataset_hourly_by_location
-from bike_rental.defs.assets.training_dataset_generation.ml_ready_by_location import X_train_hourly_by_location, y_train_hourly_by_location, X_test_hourly_by_location, y_test_hourly_by_location
-from bike_rental.defs.assets.models.linear_regression import linear_regression_model
-from bike_rental.defs.assets.evaluation.lr_model_eval import linear_regression_evaluation
+from bike_rental.defs.assets.training_dataset_generation.generated_experiments import EXPERIMENT_ASSETS
+from bike_rental.defs.assets.evaluation.rf_model_eval import total_hourly_random_forest_evaluation
+from bike_rental.defs.assets.evaluation.xgb_model_eval import total_hourly_xgboost_evaluation
+from bike_rental.defs.assets.evaluation.lr_model_eval import total_hourly_linear_regression_evaluation
 
 """ dagster asset definitions and IO configuration
 for the bike rental pipeline """
@@ -41,21 +41,10 @@ defs = Definitions(
         train_dataset_hourly_by_location,
         test_dataset_hourly,
         test_dataset_hourly_by_location,
-        y_train_hourly,
-        X_train_hourly,
-        X_test_hourly,
-        y_test_hourly,
-        X_train_hourly_by_location,
-        y_train_hourly_by_location,
-        X_test_hourly_by_location,
-        y_test_hourly_by_location,
-        y_test_processed_hourly,
-        y_train_processed_hourly,
-        X_train_processed_hourly,
-        X_test_processed_hourly,
-        linear_regression_model,
-        linear_regression_evaluation,
-
+        *EXPERIMENT_ASSETS,
+        total_hourly_linear_regression_evaluation,
+        total_hourly_xgboost_evaluation,
+        total_hourly_random_forest_evaluation,
     ],
     resources={
             "polars_parquet_io_manager": PolarsParquetIOManager(),
@@ -65,13 +54,11 @@ defs = Definitions(
             "experiment_config":
                     ExperimentConfigResource(
                         yaml_path=
-                        "src/bike_rental/defs/config/experiments.yml",
-
-                        active_json_path=
-                        "src/bike_rental/defs/config/active_experiment.json",
+                        "src/bike_rental/defs/config/experiments.yml"
                     )
         },
 )
+
 
 #TODO:
 # can do asset checks for validation and testing

@@ -1,36 +1,33 @@
-from dagster import asset, AssetIn, AssetKey
-from xgboost import XGBRegressor
+from dagster import (
+    asset,
+    AssetIn,
+    AssetKey,
+)
+
+from sklearn.ensemble import RandomForestRegressor
+
 import joblib
 import os
 
 
-def train_xgboost_model(X_train, y_train, params=None):
+def train_random_forest(X_train, y_train, params=None):
 
     params = params or {}
 
-    model = XGBRegressor(
-        enable_categorical=True,
-        objective="reg:squarederror",
+    model = RandomForestRegressor(
         n_estimators=300,
-        learning_rate=0.05,
-        max_depth=6,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        max_depth=None,
         random_state=42,
+        n_jobs=-1,
         **params,
     )
-
-    X_train = X_train.copy()
-
-    for col in X_train.select_dtypes(include=["object"]).columns:
-        X_train[col] = X_train[col].astype("category")
 
     model.fit(X_train, y_train)
 
     return model
 
 
-def create_xgboost_asset(
+def create_random_forest_asset(
     experiment_name: str,
     model_name: str,
     cfg: dict,
@@ -58,7 +55,7 @@ def create_xgboost_asset(
     )
     def model_asset(context, X_train, y_train):
 
-        model = train_xgboost_model(
+        model = train_random_forest(
             X_train,
             y_train,
             params=model_params,
@@ -75,13 +72,13 @@ def create_xgboost_asset(
             {
                 "model": model,
                 "features": list(X_train.columns),
-                "model_type": "xgboost",
+                "model_type": model_name,
             },
             path,
         )
 
         context.add_output_metadata({
-            "model_type": "XGBoost",
+            "model_type": "RandomForest",
             "experiment": experiment_name,
             "model": model_name,
             "rows": X_train.shape[0],
