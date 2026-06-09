@@ -38,8 +38,6 @@ experiments:
           impute_categorical: null
           remove_low_variance: false
 
-    
-
       random_forest:
 
         features:
@@ -73,8 +71,6 @@ experiments:
           impute_numeric: null
           impute_categorical: null
           remove_low_variance: false
-
-
 
       xgboost:
 

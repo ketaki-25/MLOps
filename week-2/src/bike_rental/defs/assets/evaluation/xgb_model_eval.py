@@ -15,9 +15,12 @@ def total_hourly_xgboost_evaluation(
 ):
     """Evaluate XGBoost model on test data."""
 
-    preds = total_hourly_xgboost_model.predict(
-        total_hourly_xgboost_X_test_processed
-    )
+    X = total_hourly_xgboost_X_test_processed.copy()
+
+    for col in X.select_dtypes(include=["object"]).columns:
+        X[col] = X[col].astype("category")
+
+    preds = total_hourly_xgboost_model.predict(X)
 
     metrics = {
         "model": "xgboost",
