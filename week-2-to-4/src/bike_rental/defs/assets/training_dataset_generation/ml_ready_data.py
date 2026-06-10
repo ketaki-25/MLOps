@@ -25,8 +25,9 @@ def create_ml_ready_assets(
 
     prefix = _prefix(experiment_name, model_name)
 
-    train_dataset_key = AssetKey(["train_dataset_hourly"])
-    test_dataset_key = AssetKey(["test_dataset_hourly"])
+    dataset_name = experiment_cfg["dataset"]
+    train_dataset_key = AssetKey([f"train_{dataset_name}"])
+    test_dataset_key = AssetKey([f"test_{dataset_name}"])
 
     # =========================================================
     # RAW (ONLY SOURCE OF TRUTH)

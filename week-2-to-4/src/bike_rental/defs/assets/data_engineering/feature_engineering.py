@@ -1,12 +1,16 @@
-from bike_rental.defs.assets.data_engineering.math_functions_for_feature_engineering import cyclic_time_features, season_features, weekend_features
+from bike_rental.defs.assets.data_engineering.math_functions_for_feature_engineering import cyclic_time_features, season_features, weekend_features, lag_features, handle_lag_nans
 from dagster import asset
 
 
 @asset(io_manager_key="pandas_parquet_io_manager", group_name="final_preprocessed_datasets", tags={"domain": "preprocessing"})
 def base_dataset_hourly(context, joined_feature_table):
     """Create an ML-ready dataset with engineered time-based features."""
+
+
     cyclic_time_df = cyclic_time_features(joined_feature_table)
-    season_df = season_features(cyclic_time_df)
+    lag_df = lag_features(cyclic_time_df)
+    cleaned_lag_df = handle_lag_nans(lag_df)
+    season_df = season_features(cleaned_lag_df)
     weekend_df = weekend_features(season_df)
 
     df = weekend_df.collect() if hasattr(weekend_df, "collect") else weekend_df
@@ -37,7 +41,9 @@ def base_dataset_hourly(context, joined_feature_table):
 def base_dataset_hourly_by_location(context, joined_feature_table_by_location):
     """Create an ML-ready dataset with engineered time-based features."""
     cyclic_time_df = cyclic_time_features(joined_feature_table_by_location)
-    season_df = season_features(cyclic_time_df)
+    lag_df = lag_features(cyclic_time_df)
+    cleaned_lag_df = handle_lag_nans(lag_df)
+    season_df = season_features(cleaned_lag_df)
     weekend_df = weekend_features(season_df)
 
     df = weekend_df.collect() if hasattr(weekend_df, "collect") else weekend_df

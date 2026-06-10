@@ -18,7 +18,8 @@ uv sync
 Start the Dagster UI web server:
 
 ```bash
-uv run dg dev
+cd week-2/
+dagster dev
 ```
 
 Open http://localhost:3000 in your browser to see the project.
