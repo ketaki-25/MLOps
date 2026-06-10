@@ -4,6 +4,7 @@ import os
 
 from bike_rental.defs.assets.models.estimator_registry import MODEL_REGISTRY
 from bike_rental.defs.assets.evaluation.eval_metrics import evaluate_model
+from bike_rental.utils.mlflow_utils import log_model_run, auto_promote_model, get_latest_version
 
 
 def create_model_asset(
@@ -13,6 +14,9 @@ def create_model_asset(
 ):
     """
     Generic model training + evaluation asset.
+
+    Adds MLflow logging and optional model registration in addition to the
+    existing local joblib persistence.
     """
 
     asset_name = f"{experiment_name}_{model_name}_model"
@@ -55,7 +59,7 @@ def create_model_asset(
         metrics = evaluate_model(model, X_test, y_test)
 
         # -------------------------
-        # Persist model
+        # Persist model locally
         # -------------------------
         path = (
             f"data/output_data/models/"
@@ -80,6 +84,30 @@ def create_model_asset(
             "model_path": path,
             **metrics,
         })
+
+        # -------------------------
+        # MLflow log metrics and params
+        # -------------------------
+        log_model_run(
+            experiment_name=experiment_name,
+            run_name=f"{model_name}_{estimator_name}",
+            model=model,
+            params={
+                "model": estimator_name,
+                "n_features": len(X_train.columns),
+            },
+            metrics=metrics,
+            model_name=model_name,
+            input_example=X_test.head(5),
+        )
+
+        latest_version = get_latest_version(experiment_name, model_name)
+
+        auto_promote_model(
+            model_name=f"{experiment_name}_{model_name}",
+            version=str(latest_version),
+            new_rmse=metrics["rmse"],
+        )
 
         return {
             "model": model,

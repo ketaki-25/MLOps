@@ -66,14 +66,3 @@ class ExperimentConfigResource:
             self._validate_experiment(name, cfg)
 
         return experiments
-
-    def get_experiment(self, experiment_name):
-
-        experiments = self.get_all_experiments()
-
-        if experiment_name not in experiments:
-            raise ValueError(
-                f"Unknown experiment: {experiment_name}"
-            )
-
-        return experiments[experiment_name]

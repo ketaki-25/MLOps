@@ -1,6 +1,6 @@
 experiments:
 
-  total_hourly:
+  hourly_total:
 
     dataset: base_dataset_hourly
     target: rental_count
