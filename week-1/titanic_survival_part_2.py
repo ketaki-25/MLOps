@@ -1,11 +1,10 @@
-import numpy as np
+import numpy_demo as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 
-data = pd.read_csv("../data/titanic.csv")
+data = pd.read_csv("data/titanic.csv")
 data.head()
 
 FEATURES = ["sex", "age", "family_size", "fare", "1st_class", "2nd_class", "3rd_class"]
@@ -22,10 +21,10 @@ print(f"Training set: {X_train.shape[0]} samples, Test set: {X_test.shape[0]} sa
 
 # TODO: Implement feature standardization.
 
-'''
+"""
 scaler = StandardScaler()
 
-# Fit ONLY on training data
+# Fit ONLY on training_dataset_generation data
 x_train_standardized = scaler.fit_transform(X_train)
 
 # Use same statistics on test data
@@ -33,7 +32,7 @@ x_test_standardized = scaler.transform(X_test)
 
 print(f"Training set: {X_train.shape[0]} samples, {X_train_scaled}")
 print(f"Test set: {X_test.shape[0]} samples")
-'''
+"""
 
 numeric_features = ["age", "family_size", "fare"]
 binary_features = ["sex", "1st_class", "2nd_class", "3rd_class"]
@@ -42,14 +41,14 @@ preprocessor = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), numeric_features),
     ],
-    remainder="passthrough"
+    remainder="passthrough",
 )
 
 x_train_standardized = preprocessor.fit_transform(X_train)
 x_test_standardized = preprocessor.transform(X_test)
 
 print(x_train_standardized, x_test_standardized)
-'''
+"""
 
 def train_standardizer(features_dataset):
 
@@ -83,17 +82,13 @@ x_train_standardized = train_standardizer(X_train)
 x_test_standardized = test_standardizer(X_train, X_test)
 
 print(x_train_standardized, x_test_standardized)
-'''
+"""
 
 
 def sigmoid(z: np.ndarray) -> np.ndarray:
     """A numerically stable sigmoid function."""
     # TODO: Implement this function.
-    return np.where(
-        z >= 0,
-        1 / (1 + np.exp(-z)),
-        np.exp(z) / (1 + np.exp(z))
-    )
+    return np.where(z >= 0, 1 / (1 + np.exp(-z)), np.exp(z) / (1 + np.exp(z)))
 
 
 print(sigmoid(x_test_standardized))
@@ -109,11 +104,11 @@ def binary_cross_entropy(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 
 def logistic_regression_gd(
-        X: np.ndarray,
-        y: np.ndarray,
-        lr: float = 0.1,
-        max_iter: int = 1000,
-        tol: float = 1e-6,
+    X: np.ndarray,
+    y: np.ndarray,
+    lr: float = 0.1,
+    max_iter: int = 1000,
+    tol: float = 1e-6,
 ) -> tuple[np.ndarray, float, list[float]]:
     """Train logistic regression via gradient descent.
 
@@ -127,9 +122,7 @@ w, b, loss_history = logistic_regression_gd(X_train_s, y_train, lr=0.1, max_iter
 
 print(f"Final loss: {loss_history[-1]:.6f}")
 print(f"Iterations: {len(loss_history)}")
-print(f"\nLearned weights:")
+print("\nLearned weights:")
 for name, weight in zip(FEATURES, w):
     print(f"  {name:>30s}: {weight:+.4f}")
 print(f"  {'bias':>30s}: {b:+.4f}")
-
-

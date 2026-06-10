@@ -57,18 +57,3 @@ def transform_features(
     )
 
     return X_processed
-
-def get_fitted_preprocessor(
-    X_train: pd.DataFrame,
-    cfg: dict,
-):
-    """
-    Build and fit the preprocessing pipeline
-    using training_dataset_generation data only.
-    """
-
-    preprocessor = build_preprocessor(cfg)
-
-    preprocessor.fit(X_train)
-
-    return preprocessor

@@ -1,16 +1,6 @@
 from bike_rental.defs.config.experiment_config import ExperimentConfigResource
 from bike_rental.defs.assets.training_dataset_generation.ml_ready_data import create_ml_ready_assets
-from bike_rental.defs.assets.models.linear_regression import create_linear_regression_asset
-from bike_rental.defs.assets.models.xgboost import create_xgboost_asset
-from bike_rental.defs.assets.models.random_forest import create_random_forest_asset
-
-MODEL_REGISTRY = {
-    "linear_regression": create_linear_regression_asset,
-    "xgboost": create_xgboost_asset,
-    "random_forest": create_random_forest_asset,
-}
-
-
+from bike_rental.defs.assets.models.create_model_asset import create_model_asset
 def generate_experiment_assets():
 
     config = ExperimentConfigResource(
@@ -26,10 +16,13 @@ def generate_experiment_assets():
         models_cfg = experiment_cfg.get("models", {})
 
         # =========================================================
-        # 1. ML-ready assets PER MODEL (IMPORTANT CHANGE)
+        # PER MODEL PIPELINE (STRICT ORDER)
         # =========================================================
         for model_name, model_cfg in models_cfg.items():
 
+            # ---------------------------------------
+            # 1. ML-ready dataset (single asset)
+            # ---------------------------------------
             assets.extend(
                 create_ml_ready_assets(
                     experiment_name=experiment_name,
@@ -39,18 +32,16 @@ def generate_experiment_assets():
                 )
             )
 
-        # =========================================================
-        # 2. MODEL TRAINING PIPELINES (unchanged structurally)
-        # =========================================================
-        for model_name, model_cfg in models_cfg.items():
-
-            model_factory = MODEL_REGISTRY[model_name]
+            # ---------------------------------------
+            # 2. Model asset (depends on ml_ready_dataset)
+            # ---------------------------------------
+            estimator_name = model_name  # matches registry keys
 
             assets.append(
-                model_factory(
+                create_model_asset(
                     experiment_name=experiment_name,
                     model_name=model_name,
-                    cfg=model_cfg,
+                    estimator_name=estimator_name,
                 )
             )
 

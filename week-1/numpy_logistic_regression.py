@@ -1,14 +1,8 @@
 import numpy as np
 
-class LogisticRegressionScratch:
 
-    def __init__(
-        self,
-        learning_rate=0.01,
-        epochs=5000,
-        C=1.0,
-        fit_intercept=True
-    ):
+class LogisticRegressionScratch:
+    def __init__(self, learning_rate=0.01, epochs=5000, C=1.0, fit_intercept=True):
 
         self.learning_rate = learning_rate
         self.epochs = epochs
@@ -20,11 +14,7 @@ class LogisticRegressionScratch:
 
     def sigmoid(self, z):
 
-        return np.where(
-            z >= 0,
-            1 / (1 + np.exp(-z)),
-            np.exp(z) / (1 + np.exp(z))
-        )
+        return np.where(z >= 0, 1 / (1 + np.exp(-z)), np.exp(z) / (1 + np.exp(z)))
 
     def compute_loss(self, y, y_hat):
 
@@ -32,13 +22,10 @@ class LogisticRegressionScratch:
 
         y_hat = np.clip(y_hat, epsilon, 1 - epsilon)
 
-        data_loss = -np.mean(
-            y * np.log(y_hat) +
-            (1 - y) * np.log(1 - y_hat)
-        )
+        data_loss = -np.mean(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
         # L2 regularization term
-        reg_loss = (1 / (2 * self.C * len(y))) * np.sum(self.weights ** 2)
+        reg_loss = (1 / (2 * self.C * len(y))) * np.sum(self.weights**2)
 
         return data_loss + reg_loss
 
@@ -51,7 +38,6 @@ class LogisticRegressionScratch:
         self.bias = 0.0
 
         for epoch in range(self.epochs):
-
             # Linear combination
             linear_model = np.dot(X, self.weights)
 
@@ -80,11 +66,9 @@ class LogisticRegressionScratch:
 
             # Print progress
             if epoch % 50 == 0:
-
                 loss = self.compute_loss(y, y_hat)
 
                 print(f"Epoch {epoch} | Loss: {loss:.6f}")
-
 
     def predict_proba(self, X):
 

@@ -13,9 +13,6 @@ from bike_rental.defs.io_managers.csv_io_manager import CsvIOManager
 from bike_rental.defs.assets.data_engineering.joins_by_location import joined_feature_table_by_location
 from bike_rental.defs.assets.training_dataset_generation.test_train_split import train_dataset_hourly, train_dataset_hourly_by_location, test_dataset_hourly, test_dataset_hourly_by_location
 from bike_rental.defs.assets.training_dataset_generation.generated_experiments import EXPERIMENT_ASSETS
-from bike_rental.defs.assets.evaluation.rf_model_eval import total_hourly_random_forest_evaluation
-from bike_rental.defs.assets.evaluation.xgb_model_eval import total_hourly_xgboost_evaluation
-from bike_rental.defs.assets.evaluation.lr_model_eval import total_hourly_linear_regression_evaluation
 
 """ dagster asset definitions and IO configuration
 for the bike rental pipeline """
@@ -42,9 +39,6 @@ defs = Definitions(
         test_dataset_hourly,
         test_dataset_hourly_by_location,
         *EXPERIMENT_ASSETS,
-        total_hourly_linear_regression_evaluation,
-        total_hourly_xgboost_evaluation,
-        total_hourly_random_forest_evaluation,
     ],
     resources={
             "polars_parquet_io_manager": PolarsParquetIOManager(),

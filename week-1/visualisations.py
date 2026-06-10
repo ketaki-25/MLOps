@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-class EDA:
 
+class EDA:
     def __init__(self, df):
         self.df = df
 
@@ -14,84 +14,55 @@ class EDA:
 
     def binary_feature_survival_plots(self):
 
-        binary_features = [
-            "sex",
-            "1st_class",
-            "2nd_class",
-            "3rd_class"
-        ]
+        binary_features = ["sex", "1st_class", "2nd_class", "3rd_class"]
 
         for feature in binary_features:
-
             plt.figure(figsize=(6, 4))
 
-            sns.barplot(
-                x=feature,
-                y='survived',
-                data=self.df
-            )
+            sns.barplot(x=feature, y="survived", data=self.df)
 
-            plt.title(f'Survival Rate by {feature}')
-
-            plt.show()
+            plt.title(f"Survival Rate by {feature}")
 
     def age_distribution(self):
 
         plt.figure(figsize=(8, 5))
 
-        sns.histplot(
-            self.df['age'],
-            bins=30,
-            kde=True
-        )
+        sns.histplot(self.df["age"], bins=30, kde=True)
 
-        plt.title('Age Distribution')
-
-        plt.show()
+        plt.title("Age Distribution")
 
     def survival_by_age_group(self):
 
         viz_df = self.df.copy()
 
-        viz_df['age_group'] = pd.cut(
-            viz_df['age'],
-            bins=np.arange(0, viz_df['age'].max() + 5, 5)
+        viz_df["age_group"] = pd.cut(
+            viz_df["age"], bins=np.arange(0, viz_df["age"].max() + 5, 5)
         )
 
         plt.figure(figsize=(12, 6))
 
-        sns.countplot(
-            data=viz_df,
-            x='age_group',
-            hue='survived'
-        )
+        sns.countplot(data=viz_df, x="age_group", hue="survived")
 
         plt.xticks(rotation=45)
 
-        plt.title('Survival Count by Age Group (5-Year Bins)')
+        plt.title("Survival Count by Age Group (5-Year Bins)")
 
-        plt.xlabel('Age Group')
-        plt.ylabel('Count')
+        plt.xlabel("Age Group")
+        plt.ylabel("Count")
 
-        plt.legend(title='Survived', labels=['No', 'Yes'])
-
-        plt.show()
+        plt.legend(title="Survived", labels=["No", "Yes"])
 
     def correlation_heatmap(self):
 
         plt.figure(figsize=(10, 6))
 
         sns.heatmap(
-            self.df.select_dtypes(
-                include=['int64', 'float64']
-            ).corr(),
+            self.df.select_dtypes(include=["int64", "float64"]).corr(),
             annot=True,
-            cmap='coolwarm'
+            cmap="coolwarm",
         )
 
-        plt.title('Correlation Heatmap')
-
-        plt.show()
+        plt.title("Correlation Heatmap")
 
     def run_all(self):
 
@@ -100,3 +71,5 @@ class EDA:
         self.age_distribution()
         self.survival_by_age_group()
         self.correlation_heatmap()
+
+        plt.show()

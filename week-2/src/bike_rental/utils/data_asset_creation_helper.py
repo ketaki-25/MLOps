@@ -20,6 +20,3 @@ def _base_metadata(experiment_name: str, model_name: str, experiment_cfg: dict) 
 def _prefix(experiment_name: str, model_name: str) -> str:
     return f"{experiment_name}_{model_name}"
 
-
-def _ak(name: str) -> AssetKey:
-    return AssetKey([name])

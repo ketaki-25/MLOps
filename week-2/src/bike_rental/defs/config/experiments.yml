@@ -12,6 +12,8 @@ experiments:
           numeric:
             - temperature_c
             - perceived_temperature_c
+            - total_lag_24
+            - total_lag_168
 
           categorical:
             - conditions
@@ -46,6 +48,8 @@ experiments:
             - perceived_temperature_c
             - humidity
             - windspeed_kmh
+            - total_lag_24
+            - total_lag_168
 
           categorical:
             - conditions
@@ -80,6 +84,8 @@ experiments:
             - perceived_temperature_c
             - humidity
             - windspeed_kmh
+            - total_lag_24
+            - total_lag_168
 
           categorical:
             - conditions
@@ -101,7 +107,7 @@ experiments:
 
         preprocessing:
           scale_numeric: false
-          one_hot_encode: false
+          one_hot_encode: true
           impute_numeric: median
           impute_categorical: most_frequent
           remove_low_variance: false

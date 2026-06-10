@@ -64,9 +64,7 @@ def validate_feature_alignment(X, selected_features, cfg):
 
 
 def build_preprocessor(config, X=None):
-    """
-    X is optional but HIGHLY recommended for validation
-    """
+    """X is optional but HIGHLY recommended for validation"""
 
     if "features" not in config or "preprocessing" not in config:
         raise ValueError("Missing 'features' or 'preprocessing' section.")
@@ -121,7 +119,7 @@ def build_preprocessor(config, X=None):
 
     if one_hot_encode:
         categorical_steps.append(
-            ("encoder", OneHotEncoder(handle_unknown="ignore"))
+            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
         )
 
     if categorical:

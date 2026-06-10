@@ -9,18 +9,21 @@ dependencies = [
     "dagster-webserver>=1.12.1",
     "ipykernel>=6.31.0",
     "matplotlib>=3.9.4",
+    "mlflow>=3.0.0",
     "nbconvert>=7.17.1",
     "numpy>=2.0.2",
     "pandas>=2.3.3",
     "pandas-stubs>=2.2.2.240807",
     "polars>=1.36.1",
-    "pyarrow>=21.0.0",
+    "pyarrow>=20.0.0,<21.0.0",
+    "python-dotenv>=1.2.1",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
+    "xgboost>=2.1.4",
 ]
 
 [tool.setuptools.packages.find]
-where = ["week-2/src"]
+where = ["week-2-to-4/src"]
 
 [tool.dagster]
 module_name = "bike_rental.definitions"
@@ -29,3 +32,8 @@ code_location_name = "bike_rental"
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.15",
+]

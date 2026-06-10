@@ -69,3 +69,33 @@ def weekend_features(df):
     )
 
     return result
+
+
+def lag_features(df):
+    result = df.sort("datetime_hour").with_columns(
+        [
+            # same hour previous day
+            pl.col("rental_count").shift(24).alias("total_lag_24"),
+
+            # same hour previous week
+            pl.col("rental_count").shift(24 * 7).alias("total_lag_168"),
+
+            # same hour previous day only direct rentals
+            pl.col("direct_rentals").shift(24).alias("direct_lag_24"),
+
+            # same hour previous week only direct rentals
+            pl.col("direct_rentals").shift(24 * 7).alias("direct_lag_168"),
+
+            # same hour previous week only registered rentals
+            pl.col("registered_rentals").shift(24).alias("registered_lag_24"),
+
+            # same hour previous week only registered rentals
+            pl.col("registered_rentals").shift(24 * 7).alias("registered_lag_168"),
+        ]
+    )
+
+    return result
+
+def handle_lag_nans(df):
+    return df.drop_nulls(subset=["total_lag_24", "total_lag_168", "direct_lag_24", "direct_lag_168", "registered_lag_24", "registered_lag_168"])
+

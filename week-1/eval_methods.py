@@ -10,12 +10,11 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
-    roc_curve
+    roc_curve,
 )
 
 
 class ModelEvaluation:
-
     def evaluate(self, y_test, y_pred, y_prob):
 
         print("\n===== CONFUSION MATRIX =====")
@@ -26,16 +25,11 @@ class ModelEvaluation:
 
         plt.figure(figsize=(6, 5))
 
-        sns.heatmap(
-            cm,
-            annot=True,
-            fmt='d',
-            cmap='Blues'
-        )
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
 
-        plt.title('Confusion Matrix')
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
+        plt.title("Confusion Matrix")
+        plt.xlabel("Predicted")
+        plt.ylabel("Actual")
 
         plt.show()
 
@@ -63,19 +57,14 @@ class ModelEvaluation:
 
         plt.figure(figsize=(7, 5))
 
-        plt.plot(fpr, tpr, label=f'AUC = {roc_auc:.2f}')
+        plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.2f}")
 
-        plt.plot(
-            [0, 1],
-            [0, 1],
-            linestyle='--',
-            color='red'
-        )
+        plt.plot([0, 1], [0, 1], linestyle="--", color="red")
 
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
 
-        plt.title('ROC Curve')
+        plt.title("ROC Curve")
 
         plt.legend()
 
@@ -83,13 +72,9 @@ class ModelEvaluation:
 
     def feature_importance(self, X, model):
 
-        coefficients = pd.DataFrame({
-            'Feature': X.columns,
-            'Coefficient': model.coef_[0]
-        }).sort_values(
-            by='Coefficient',
-            ascending=False
-        )
+        coefficients = pd.DataFrame(
+            {"Feature": X.columns, "Coefficient": model.coef_[0]}
+        ).sort_values(by="Coefficient", ascending=False)
 
         print("\n===== FEATURE IMPORTANCE =====")
 
@@ -97,14 +82,8 @@ class ModelEvaluation:
 
         plt.figure(figsize=(10, 6))
 
-        sns.barplot(
-            x='Coefficient',
-            y='Feature',
-            data=coefficients
-        )
+        sns.barplot(x="Coefficient", y="Feature", data=coefficients)
 
-        plt.title(
-            'Feature Importance (Logistic Regression Coefficients)'
-        )
+        plt.title("Feature Importance (Logistic Regression Coefficients)")
 
         plt.show()
