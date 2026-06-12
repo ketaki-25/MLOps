@@ -13,9 +13,14 @@ from bike_rental.defs.io_managers.csv_io_manager import CsvIOManager
 from bike_rental.defs.assets.data_engineering.joins_by_location import joined_feature_table_by_location
 from bike_rental.defs.assets.training_dataset_generation.test_train_split import train_dataset_hourly, train_dataset_hourly_by_location, test_dataset_hourly, test_dataset_hourly_by_location
 from bike_rental.defs.assets.training_dataset_generation.generated_experiments import EXPERIMENT_ASSETS
+from bike_rental.defs.resources.lakefs_resource import LakeFSResource
 
 """ dagster asset definitions and IO configuration
 for the bike rental pipeline """
+
+
+lakefs = LakeFSResource()
+
 
 defs = Definitions(
     assets=[
@@ -41,6 +46,7 @@ defs = Definitions(
         *EXPERIMENT_ASSETS,
     ],
     resources={
+            "lakefs_res": LakeFSResource(),
             "polars_parquet_io_manager": PolarsParquetIOManager(),
             "pandas_parquet_io_manager": PandasParquetIOManager(),
             "csv_io_manager": CsvIOManager(),
@@ -49,8 +55,9 @@ defs = Definitions(
                     ExperimentConfigResource(
                         yaml_path=
                         "src/bike_rental/defs/config/experiments.yml"
-                    )
+                    ),
         },
+    jobs=[],
 )
 
 

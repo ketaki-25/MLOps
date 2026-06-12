@@ -1,0 +1,26 @@
+services:
+  lakefs:
+    image: treeverse/lakefs:latest
+    container_name: bike-rental-lakefs
+    user: root
+    ports:
+      - "8000:8000"
+    environment:
+      # Pre-seed the initial admin so no interactive `lakefs setup` is needed.
+      LAKEFS_INSTALLATION_USER_NAME: admin
+      LAKEFS_INSTALLATION_ACCESS_KEY_ID: ${LAKEFS_ACCESS_KEY}
+      LAKEFS_INSTALLATION_SECRET_ACCESS_KEY: ${LAKEFS_SECRET_KEY}
+      # Local metadata store and blockstore, persisted to named volumes.
+      LAKEFS_DATABASE_TYPE: local
+      LAKEFS_DATABASE_LOCAL_PATH: /lakefs/metadata
+      LAKEFS_BLOCKSTORE_TYPE: local
+      LAKEFS_BLOCKSTORE_LOCAL_PATH: /lakefs/data
+      LAKEFS_AUTH_ENCRYPT_SECRET_KEY: "local-dev-encrypt-key-change-me"
+    volumes:
+      - lakefs-meta:/lakefs/metadata
+      - lakefs-data:/lakefs/data
+    command: ["run"]
+
+volumes:
+  lakefs-meta:
+  lakefs-data:
