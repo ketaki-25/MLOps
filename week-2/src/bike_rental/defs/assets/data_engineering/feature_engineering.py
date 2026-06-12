@@ -18,7 +18,7 @@ def generate_ml_metadata(df):
     }
 
 @asset(io_manager_key="pandas_parquet_io_manager", group_name="final_preprocessed_datasets", tags={"domain": "preprocessing"})
-def base_dataset_hourly(context, joined_feature_table, lakefs_res : LakeFSResource):
+def base_dataset_hourly(context, joined_feature_table):
     """Create an ML-ready dataset with engineered time-based features."""
     cyclic_time_df = cyclic_time_features(joined_feature_table)
     lag_df = lag_features(cyclic_time_df)
@@ -49,28 +49,10 @@ def base_dataset_hourly_by_location(context, joined_feature_table_by_location):
 
     df = weekend_df.collect() if hasattr(weekend_df, "collect") else weekend_df
 
-
     df = df.to_pandas() if hasattr(df, "to_pandas") else df
 
-    # --- lakeFS Branching Setup ---
-    run_id = context.run_id
-    branch_name = f"dagster-run-{run_id}"
-
-    lakefs_res = context.resources.lakefs_res
-
-    # Ensure our isolated experiment/run branch exists
-    lakefs_res.ensure_branch(branch=branch_name, source="main")
-
     metadata = generate_ml_metadata(df)
-    # --- Commit changes to lakeFS ---
-    # Note: If your I/O manager writes *after* the asset returns,
-    # look into moving this commit logic into a Dagster @success_hook!
-    commit_id = lakefs_res.commit(
-        branch=branch_name,
-        message=f"Feature engineering dataset created for run {run_id}",
-        metadata=metadata
-    )
-    context.log.info(f"Committed data to lakeFS branch {branch_name}. Commit ID: {commit_id}")
+
 
     context.add_output_metadata(metadata)
 

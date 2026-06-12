@@ -1,5 +1,6 @@
 from dagster import asset, AssetIn, AssetKey, multi_asset, AssetOut
 
+from bike_rental.defs.io_managers.ml_ready_io_manager import MLReadyDatasetIOManager
 from bike_rental.utils.model_specific_preprocessing import validate_feature_alignment
 from bike_rental.utils.fit_transform_helper import fit_transform_features, transform_features
 
@@ -25,6 +26,7 @@ def create_ml_ready_assets(
             "train_dataset": AssetIn(key=AssetKey(["train_dataset_hourly"])),
             "test_dataset": AssetIn(key=AssetKey(["test_dataset_hourly"])),
         },
+        io_manager_key="ml_ready_io_manager",
     )
     def ml_ready_dataset(context, train_dataset, test_dataset):
 

@@ -10,6 +10,7 @@ from bike_rental.defs.assets.data_engineering.weather import hourly_weather
 from bike_rental.defs.assets.data_engineering.joins_by_location import hourly_rentals_by_location_full_grid
 from bike_rental.defs.io_managers.parquet_io_manager import PolarsParquetIOManager, PandasParquetIOManager
 from bike_rental.defs.io_managers.csv_io_manager import CsvIOManager
+from bike_rental.defs.io_managers.ml_ready_io_manager import MLReadyDatasetIOManager
 from bike_rental.defs.assets.data_engineering.joins_by_location import joined_feature_table_by_location
 from bike_rental.defs.assets.training_dataset_generation.test_train_split import train_dataset_hourly, train_dataset_hourly_by_location, test_dataset_hourly, test_dataset_hourly_by_location
 from bike_rental.defs.assets.training_dataset_generation.generated_experiments import EXPERIMENT_ASSETS
@@ -49,6 +50,7 @@ defs = Definitions(
             "lakefs_res": LakeFSResource(),
             "polars_parquet_io_manager": PolarsParquetIOManager(),
             "pandas_parquet_io_manager": PandasParquetIOManager(),
+            "ml_ready_io_manager": MLReadyDatasetIOManager(),
             "csv_io_manager": CsvIOManager(),
             "loader": DataLoader(),
             "experiment_config":

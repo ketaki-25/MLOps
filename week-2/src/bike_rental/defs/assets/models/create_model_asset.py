@@ -5,8 +5,7 @@ import os
 from bike_rental.defs.assets.models.estimator_registry import MODEL_REGISTRY
 from bike_rental.defs.assets.evaluation.eval_metrics import evaluate_model
 from bike_rental.utils.mlflow_utils import log_model_run, auto_promote_model, get_latest_version
-
-
+from bike_rental.utils.get_upstream_commit_id import get_upstream_commit_id
 def create_model_asset(
     experiment_name: str,
     model_name: str,
@@ -33,6 +32,7 @@ def create_model_asset(
         },
     )
     def model_asset(context, ml_ready):
+        lakefs_commit_id = get_upstream_commit_id(context, ml_ready_key)
 
         # -------------------------
         # Get estimator
@@ -95,8 +95,14 @@ def create_model_asset(
             params={
                 "model": estimator_name,
                 "n_features": len(X_train.columns),
+                "lakefs_commit_id": lakefs_commit_id,  # ← dataset version
+                "lakefs_dataset_uri": f"lakefs://{...}/dev/{experiment_name}_{model_name}_ml_ready_dataset",
             },
             metrics=metrics,
+            tags={
+                "dataset.commit_id": lakefs_commit_id,  # ← also as a tag for filtering
+                "dataset.source": "lakefs",
+            },
             model_name=model_name,
             input_example=X_test.head(5),
         )

@@ -113,6 +113,7 @@ def log_model_run(
     metrics: dict,
     input_example,
     model_name: str = "model",
+    tags : dict = None,
 ):
     mlflow.set_tracking_uri("http://localhost:5000")
     mlflow.set_experiment(experiment_name)
@@ -126,6 +127,10 @@ def log_model_run(
         # log metrics
         for k, v in metrics.items():
             log_metric(k, v)
+
+        # log tags
+        if tags:
+            mlflow.set_tags(tags)
 
         predictions = model.predict(input_example)
 
