@@ -73,29 +73,56 @@ class PandasParquetIOManager(IOManager):
 class PandasParquetIOManager(IOManager):
     def _get_lakefs_path_and_options(self, context, lakefs_res: LakeFSResource) -> tuple[str, dict]:
         """Helper to construct the lakeFS path and storage credentials."""
+        run_id = context.run_id
+        branch_name = f"dagster-run-{run_id}"
+        asset_path = "/".join(context.asset_key.path)
+
+        # Ensure branch exists before writing
+        lakefs_res.ensure_branch(branch=branch_name, source="dev")
+
+        lakefs_uri = f"lakefs://{lakefs_res.repository}/{branch_name}/{asset_path}.parquet"
+
+        return lakefs_uri, lakefs_res.storage_options()
+
+    def handle_output(self, context: OutputContext, obj: pd.DataFrame):
+        lakefs_res = LakeFSResource()
+        path, storage_options = self._get_lakefs_path_and_options(context, lakefs_res=lakefs_res)
+
+        context.log.info(f"Writing asset output to lakeFS: {path}")
+        obj.to_parquet(path, index=False, storage_options=storage_options)
 
         run_id = context.run_id
         branch_name = f"dagster-run-{run_id}"
 
-        asset_path = "/".join(context.asset_key.path)
+        try:
+            # Pull metadata from the output context if the asset attached it
+            metadata = context.definition_metadata or {}
 
-        lakefs_res.ensure_branch(branch_name)
+            commit_id = lakefs_res.commit(
+                branch=branch_name,
+                message=f"Auto committing: {context.asset_key} written for run {run_id}",
+                metadata=metadata,
+            )
 
-        s3_uri = f"lakefs://{lakefs_res.repository}/{branch_name}/{asset_path}.parquet"
+            if commit_id:
+                context.log.info(f"Committed to lakeFS. Commit ID: {commit_id}")
 
-        return s3_uri, lakefs_res.storage_options()
+                context.log.info(f"Merging {branch_name} into dev...")
+                lakefs_res.merge_branches(source=branch_name, destination="dev")
+                context.log.info("Merge to dev successful!")
+            else:
+                context.log.info("No changes detected. Skipping commit and merge.")
 
-    def handle_output(self, context: OutputContext, obj: pd.DataFrame):
-        path, storage_options = self._get_lakefs_path_and_options(context, lakefs_res=LakeFSResource())
-        context.log.info(f"Writing asset output to lakeFS: {path}")
+        finally:
 
-        # Stream directly via s3fs down to your local container instance
-        obj.to_parquet(path, index=False, storage_options=storage_options)
+            lakefs_res.delete_branch(branch_name)
+            context.log.info(f"Cleaned up ephemeral branch: {branch_name}")
 
     def load_input(self, context: InputContext):
-        path, storage_options = self._get_lakefs_path_and_options(context, lakefs_res=LakeFSResource())
-        context.log.info(f"Reading asset input from lakeFS: {path}")
+        lakefs_res = LakeFSResource()
+        path, storage_options = self._get_lakefs_path_and_options(context, lakefs_res=lakefs_res)
 
+        context.log.info(f"Reading asset input from lakeFS: {path}")
         return pd.read_parquet(path, storage_options=storage_options)
 
 

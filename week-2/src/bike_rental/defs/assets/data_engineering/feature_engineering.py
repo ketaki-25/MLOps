@@ -32,37 +32,7 @@ def base_dataset_hourly(context, joined_feature_table, lakefs_res : LakeFSResour
     df = df.to_pandas() if hasattr(df, "to_pandas") else df
     print(type(df))
 
-    # --- lakeFS Branching Setup ---
-    # 2. Ensure isolated lakeFS workspace branch exists before I/O Manager writes to it
-    run_id = context.run_id
-    branch_name = f"dagster-run-{run_id}"
-    #lakefs_res = context.resources.lakefs_res
-    lakefs_res.ensure_branch(branch=branch_name, source="dev")
-
     metadata = generate_ml_metadata(df)
-
-    # --- Commit changes to lakeFS ---
-
-    # Note: If your I/O manager writes *after* the asset returns,
-    # look into moving this commit logic into a Dagster @success_hook!
-    commit_id = lakefs_res.commit(
-        branch=branch_name,
-        message=f"Auto committing: Feature engineering dataset created for run {run_id}",
-        metadata=metadata
-    )
-    if commit_id:
-        context.log.info(f"Changes detected. Commering to lakeFS. Commit ID: {commit_id}")
-
-        # 2. Merge changes atomically back to dev
-        context.log.info(f"Merging {branch_name} into dev branch...")
-        lakefs_res.merge_branches(source=branch_name, destination="dev")
-        context.log.info("Merge to dev successful!")
-    else:
-        context.log.info("No data modifications detected. Skipping commit and merge steps.")
-
-    # 3. Always clean up your short-lived run branch to keep the repo uncluttered
-    lakefs_res.delete_branch(branch_name)
-    context.log.info(f"Cleaned up ephemeral branch: {branch_name}")
 
     context.add_output_metadata(metadata)
 
